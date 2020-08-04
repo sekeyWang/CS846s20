@@ -9,7 +9,8 @@ def f1(df, libraries):
     f1 is used to analyse LU of a dependency
     '''
 #    library = "junit-junit-3.8.1"
-    date_time_obj = datetime.datetime.fromisoformat('2016-01-01 00:00:00+00:00')
+    date_time_start = datetime.datetime.fromisoformat('2019-01-01 00:00:00+00:00')
+    date_time_end = datetime.datetime.fromisoformat('2021-01-01 00:00:00+00:00')
     for library in libraries:
         l_df = df.loc[(df["dependencies"] == library)] 
         record = []
@@ -22,7 +23,9 @@ def f1(df, libraries):
         record = sorted(record, key=lambda parameter: parameter['date'])
         x, y, lu = [], [], 0
         for r in record:
-            if r['date'] > date_time_obj:
+            if r['date'] < date_time_start:
+                continue
+            if r['date'] > date_time_end:
                 break
             lu += r['label']
             y.append(lu)
@@ -133,6 +136,125 @@ def f6(df):
 
 #    print(days)
 
+def f7(df1, df2):
+    '''
+    f7 is to compare the Peak LU of each dependency
+    '''
+    libraries = np.unique(df1['dependencies'])
+    max_LU_list = []
+    for library in libraries:
+        l_df = df1.loc[(df1["dependencies"] == library)] 
+        record = []
+        for index, row in l_df.iterrows():
+            start, end = datetime.datetime.fromisoformat(row['start']), datetime.datetime.fromisoformat(row['end'])
+            record.append({'date': start, 'label' : 1})
+            record.append({'date': end, 'label' : -1})
+        record = sorted(record, key=lambda parameter: parameter['date'])
+        LU, max_LU = 0, 0
+        for r in record:
+            LU += r['label']
+            max_LU = max(max_LU, LU)
+        max_LU_list.append(max_LU)
+    max_LU_list = sorted(max_LU_list)
+#    print(max_LU_list)
+    y = []
+    for i in range(200):
+        y.append(bisect.bisect_right(max_LU_list, i) / len(max_LU_list))
+    plt.plot(np.arange(200), y, label='2015')
+
+    libraries = np.unique(df2['dependencies'])
+    max_LU_list = []
+    for library in libraries:
+        l_df = df2.loc[(df2["dependencies"] == library)] 
+        record = []
+        for index, row in l_df.iterrows():
+            start, end = datetime.datetime.fromisoformat(row['start']), datetime.datetime.fromisoformat(row['end'])
+            record.append({'date': start, 'label' : 1})
+            record.append({'date': end, 'label' : -1})
+        record = sorted(record, key=lambda parameter: parameter['date'])
+        LU, max_LU = 0, 0
+        for r in record:
+            LU += r['label']
+            max_LU = max(max_LU, LU)
+        max_LU_list.append(max_LU)
+    max_LU_list = sorted(max_LU_list)
+#    print(max_LU_list)
+    y = []
+    for i in range(200):
+        y.append(bisect.bisect_right(max_LU_list, i) / len(max_LU_list))
+    plt.plot(np.arange(200), y, label='2019')
+    plt.legend()
+    plt.xscale('log')
+    plt.hlines(0.75, 0, 200)
+    plt.vlines(1.34, 0, 1)
+    plt.vlines(2.8, 0, 1)
+#    plt.yticks(['{:,.2%}'.format(x) for x in y])
+    plt.show()
+
+def f8(df1, df2):
+    '''
+    f8 is to compare two pre-peak
+    '''
+    libraries = np.unique(df1['dependencies'])
+    days = []
+    for library in libraries:
+        l_df = df1.loc[(df1["dependencies"] == library)] 
+        record = []
+        for index, row in l_df.iterrows():
+            start, end = datetime.datetime.fromisoformat(row['start']), datetime.datetime.fromisoformat(row['end'])
+            record.append({'date': start, 'label' : 1})
+            record.append({'date': end, 'label' : -1})
+        record = sorted(record, key=lambda parameter: parameter['date'])
+        LU, max_LU = 0, 0
+        init_date = record[0]['date']
+        for r in record:
+            LU += r['label']
+            if LU > max_LU:
+                peak_date = r['date']
+            max_LU = max(max_LU, LU)
+        post_peak = (peak_date - init_date).days
+        days.append(post_peak)
+    days = sorted([x for x in days if x != 0])
+
+    y = []
+    for i in range(3000):
+        y.append(bisect.bisect_right(days, i) / len(days))
+    plt.plot(np.arange(3000), y, label='2015')
+
+    libraries = np.unique(df2['dependencies'])
+    days = []
+    for library in libraries:
+        l_df = df2.loc[(df2["dependencies"] == library)] 
+        record = []
+        for index, row in l_df.iterrows():
+            start, end = datetime.datetime.fromisoformat(row['start']), datetime.datetime.fromisoformat(row['end'])
+            record.append({'date': start, 'label' : 1})
+            record.append({'date': end, 'label' : -1})
+        record = sorted(record, key=lambda parameter: parameter['date'])
+        LU, max_LU = 0, 0
+        init_date = record[0]['date']
+        for r in record:
+            LU += r['label']
+            if LU > max_LU:
+                peak_date = r['date']
+            max_LU = max(max_LU, LU)
+        post_peak = (peak_date - init_date).days
+        days.append(post_peak)
+    days = sorted([x for x in days if x != 0])
+
+    y = []
+    for i in range(3000):
+        y.append(bisect.bisect_right(days, i) / len(days))
+    plt.plot(np.arange(3000), y, label='2019')
+
+    plt.hlines(0.75, 0, 3000)
+    plt.vlines(560, 0, 1)
+    plt.vlines(163, 0, 1)
+    plt.legend()
+    plt.show()
+
 if __name__ == "__main__":
-    df = pd.read_csv('project_dependency.csv')
-    f1(df, ['junit-junit-3.8.1', 'junit-junit-4.10', 'junit-junit-4.11'])
+    df1 = pd.read_csv('project_dependency.csv')
+    df2 = pd.read_csv('project_dependency2.csv')
+    f7(df1, df2)
+#    f1(df2, ['junit-junit-4.11', 'junit-junit-4.12'])
