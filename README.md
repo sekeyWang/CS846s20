@@ -6,7 +6,7 @@ Environment: Python3
 
 Packages: gitpython, pandas, numpy, matplotlob
 
-##Code
+## Code
 
 find_repo.py: use github API to obtain targeting project url.
 
@@ -16,7 +16,7 @@ maven.py: Module that provides functions for analyzing Maven dependencies across
 
 analysis.py: Script to analyse on the result file and plot figures.
 
-##File
+## File
 
 LU_metricsLMP.csv, Projects.csv, Projects2019.csv: all dependencies and repositories
 
